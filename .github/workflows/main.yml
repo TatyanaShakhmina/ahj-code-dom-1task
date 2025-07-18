@@ -1,18 +1,12 @@
-name: Node.js CI
+name: CI + Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
+    branches: [main]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18]
 
     steps:
       - name: Checkout code
@@ -21,16 +15,21 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18
 
-      - name: Clean npm cache and reinstall dependencies
-        run: |
-          npm cache clean --force
-          rm -rf node_modules package-lock.json
-          npm install
-          npx update-browserslist-db@latest --update-db
+      - name: Install dependencies
+        run: npm install
 
       - name: Run linter and tests
         run: |
           npm run lint
           npm test
+
+      - name: Build the project
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
